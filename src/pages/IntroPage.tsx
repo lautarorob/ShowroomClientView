@@ -2,7 +2,6 @@ import { useNavigate } from 'react-router-dom'
 import { ProjectVideo } from '../components/ProjectVideo'
 import { useProject } from '../components/projectContextBase'
 import { SpinView } from '../components/SpinView'
-import { asset } from '../data'
 
 /**
  * Intro splash: the project film as a fullscreen background with the logo
@@ -25,9 +24,6 @@ export function IntroPage() {
         ? [{ stopPointSlug: '0', backgroundImgUrl: homeBg }]
         : []
 
-  const logoUrl = project.home.logo?.logoImgUrl
-    ? asset(project.home.logo.logoImgUrl)
-    : undefined
   const enterTitle = project.home.enterButton?.title ?? 'Entrar'
 
   return (
@@ -38,9 +34,7 @@ export function IntroPage() {
         <SpinView stopPoints={points} interactive={false} />
       )}
 
-      {logoUrl && (
-        <img className="intro__logo" src={logoUrl} alt="PH Balcony" draggable={false} />
-      )}
+      <img className="intro__logo" src="/logo-light.svg" alt="Terrazy" draggable={false} />
 
       <button
         type="button"

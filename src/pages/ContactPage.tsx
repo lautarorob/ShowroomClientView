@@ -115,7 +115,7 @@ export function ContactPage() {
               <div className="contact__info-block">
                 <h4>Proyecto</h4>
                 <p>
-                  <strong>{contactPage?.projectName ?? 'PH Balcony'}</strong>
+                  <strong>{contactPage?.projectName ?? 'Terrazy'}</strong>
                   <br />
                   {contactPage?.projectDescription ?? meta.email}
                 </p>

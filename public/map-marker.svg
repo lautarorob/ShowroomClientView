@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 38 48" fill="none" role="img" aria-label="Terrazy">
+  <path
+    d="M19 1C9.6 1 2 8.6 2 18c0 12.2 15.1 27.4 15.7 28a2.5 2.5 0 0 0 3.6 0C21.9 45.4 37 30.2 37 18 37 8.6 29.4 1 19 1z"
+    fill="#996633"
+    stroke="#151515"
+    stroke-width="2"
+  />
+  <circle cx="19" cy="18" r="7" fill="#ffffff"/>
+  <g fill="#996633" transform="translate(13.5 12.5) scale(0.172)">
+    <rect x="0" y="8" width="60" height="10" rx="5"/>
+    <rect x="25" y="18" width="11" height="22" rx="5"/>
+    <rect x="42" y="30" width="16" height="8" rx="4"/>
+  </g>
+</svg>

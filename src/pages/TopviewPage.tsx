@@ -1,5 +1,9 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import type { MouseEvent as ReactMouseEvent } from 'react'
+import type {
+  MouseEvent as ReactMouseEvent,
+  PointerEvent as ReactPointerEvent,
+  WheelEvent as ReactWheelEvent,
+} from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Layout, TopBarButton } from '../components/Layout'
 import { useProject } from '../components/projectContextBase'
@@ -51,6 +55,9 @@ export function TopviewPage() {
   const containerRef = useRef<HTMLDivElement>(null)
   const cardRef = useRef<HTMLDivElement>(null)
   const settleAtRef = useRef(0)
+  const listRef = useRef<HTMLDivElement>(null)
+  const dragRef = useRef<{ x: number; left: number; pid: number } | null>(null)
+  const dragMovedRef = useRef(false)
 
   const level = levels[levelIndex]
   const svgSource = level ? (svgByLevel[level.levelSlug] ?? '') : ''
@@ -104,6 +111,22 @@ export function TopviewPage() {
       alive = false
     }
   }, [level, unitBySvgId, svgByLevel])
+
+  // Keep the active chip in view: the floor bar slides along with the
+  // selected level instead of staying clipped at a fixed window.
+  useEffect(() => {
+    const list = listRef.current
+    if (!list) return
+    const chip = list.querySelector<HTMLElement>('.level-chip.is-active')
+    if (!chip) return
+    const listRect = list.getBoundingClientRect()
+    const chipRect = chip.getBoundingClientRect()
+    const target =
+      list.scrollLeft +
+      (chipRect.left - listRect.left) -
+      (list.clientWidth - chipRect.width) / 2
+    list.scrollTo({ left: Math.max(0, target), behavior: 'smooth' })
+  }, [levelIndex])
 
   // Keep the card inside the viewport: below-right of the cursor, flipping
   // above it near the bottom and clear of the top bar / level scrubber.
@@ -170,6 +193,57 @@ export function TopviewPage() {
     setPinnedAnchor(null)
   }
 
+  const goToLevel = (i: number) => {
+    setLevelIndex(i)
+    closeCard()
+    setDetailUnitId(null)
+  }
+
+  /** Vertical wheel scrolls the bar horizontally (the scrollbar is hidden). */
+  const onListWheel = (e: ReactWheelEvent<HTMLDivElement>) => {
+    const delta =
+      Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY
+    if (delta) e.currentTarget.scrollLeft += delta
+  }
+
+  // Drag-to-pan. Pointer capture is only taken once the drag threshold is
+  // crossed: capturing on pointerdown would retarget the following click to
+  // this container and the chips' onClick would never fire.
+  const onListPointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
+    dragMovedRef.current = false
+    if (e.pointerType !== 'mouse' || e.button !== 0) return
+    dragRef.current = { x: e.clientX, left: e.currentTarget.scrollLeft, pid: e.pointerId }
+  }
+
+  const onListPointerMove = (e: ReactPointerEvent<HTMLDivElement>) => {
+    const drag = dragRef.current
+    if (!drag) return
+    // The pointerup happened outside the bar: drop the stale drag state.
+    if ((e.buttons & 1) === 0) {
+      dragRef.current = null
+      e.currentTarget.classList.remove('is-dragging')
+      return
+    }
+    const dx = e.clientX - drag.x
+    if (!dragMovedRef.current && Math.abs(dx) >= 4) {
+      dragMovedRef.current = true
+      e.currentTarget.setPointerCapture(drag.pid)
+      e.currentTarget.classList.add('is-dragging')
+    }
+    if (!dragMovedRef.current) return
+    e.currentTarget.scrollLeft = drag.left - dx
+  }
+
+  const onListPointerUp = (e: ReactPointerEvent<HTMLDivElement>) => {
+    const drag = dragRef.current
+    dragRef.current = null
+    if (!drag) return
+    e.currentTarget.classList.remove('is-dragging')
+    if (e.currentTarget.hasPointerCapture(drag.pid)) {
+      e.currentTarget.releasePointerCapture(drag.pid)
+    }
+  }
+
   if (!level) return <Layout title="Plantas" />
 
   return (
@@ -206,12 +280,7 @@ export function TopviewPage() {
         >
           <div
             style={{ position: 'absolute', inset: 0 }}
-            dangerouslySetInnerHTML={{
-              __html: svgSource.replace(
-                /<svg([^>]*)>/i,
-                '<svg$1 preserveAspectRatio="xMidYMid slice" style="width:100%;height:100%;display:block"',
-              ),
-            }}
+            dangerouslySetInnerHTML={{ __html: fitSvgRoot(svgSource) }}
           />
           {anchor && cardUnit && (
             <UnitCard
@@ -232,8 +301,28 @@ export function TopviewPage() {
         </div>
       )}
 
-      <nav className="level-scrubber" aria-label="Selector de planta">
-        <div className="level-scrubber__list">
+      <nav
+        className="level-scrubber"
+        aria-label="Selector de planta"
+        onKeyDown={(e) => {
+          if (e.key === 'ArrowRight' && levelIndex < levels.length - 1) {
+            e.preventDefault()
+            goToLevel(levelIndex + 1)
+          } else if (e.key === 'ArrowLeft' && levelIndex > 0) {
+            e.preventDefault()
+            goToLevel(levelIndex - 1)
+          }
+        }}
+      >
+        <div
+          ref={listRef}
+          className="level-scrubber__list"
+          onWheel={onListWheel}
+          onPointerDown={onListPointerDown}
+          onPointerMove={onListPointerMove}
+          onPointerUp={onListPointerUp}
+          onPointerCancel={onListPointerUp}
+        >
           {levels.map((l, i) => (
             <button
               key={l.levelId}
@@ -243,9 +332,8 @@ export function TopviewPage() {
               }`}
               aria-current={i === levelIndex}
               onClick={() => {
-                setLevelIndex(i)
-                closeCard()
-                setDetailUnitId(null)
+                if (dragMovedRef.current) return
+                goToLevel(i)
               }}
             >
               {l.displayName}
@@ -268,6 +356,23 @@ function findByUnitId(
     if (ctx.unit.unitId === unitId) return ctx
   }
   return undefined
+}
+
+/**
+ * Normalise the level SVG's root tag: close it (the tag must be a complete
+ * element or the parser swallows the first child — e.g. piso 16 starts with
+ * `<style>`, which would be eaten and leave the plan unstyled/black) and make
+ * sure the sizing attributes are applied exactly once. Roots that already
+ * carry `style`/`preserveAspectRatio` (again, piso 16) would otherwise end up
+ * with duplicates, and HTML keeps only the first of each.
+ */
+function fitSvgRoot(src: string): string {
+  return src.replace(/<svg([^>]*)>/i, (_match, attrs: string) => {
+    const cleaned = attrs
+      .replace(/\s+preserveAspectRatio="[^"]*"/gi, '')
+      .replace(/\s+style="[^"]*"/gi, '')
+    return `<svg${cleaned} preserveAspectRatio="xMidYMid slice" style="width:100%;height:100%;display:block">`
+  })
 }
 
 /** Apply availability colours to unit polygons inside the level SVG. */

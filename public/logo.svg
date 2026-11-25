@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 268 64" fill="none" role="img" aria-label="Terrazy">
+  <g fill="#996633">
+    <rect x="4" y="14" width="56" height="10" rx="5"/>
+    <rect x="26" y="24" width="12" height="26" rx="5"/>
+    <rect x="44" y="36" width="16" height="8" rx="4"/>
+  </g>
+  <text
+    x="76"
+    y="44"
+    font-family="Helvetica, Arial, sans-serif"
+    font-size="34"
+    font-weight="700"
+    letter-spacing="5"
+    fill="#151515"
+  >TERRAZY</text>
+</svg>

@@ -720,11 +720,18 @@ a {
   gap: 4px;
   overflow-x: auto;
   scrollbar-width: none;
-  max-width: min(560px, 60vw);
+  max-width: min(640px, calc(100vw - 160px));
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+  cursor: grab;
 }
 
 .level-scrubber__list::-webkit-scrollbar {
   display: none;
+}
+
+.level-scrubber__list.is-dragging {
+  cursor: grabbing;
 }
 
 .level-chip {
@@ -1964,7 +1971,7 @@ a {
   }
 
   .level-scrubber__list {
-    max-width: 55vw;
+    max-width: calc(100vw - 76px);
   }
 
   .gallery__arrow--prev {

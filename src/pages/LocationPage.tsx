@@ -3,7 +3,7 @@ import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { Layout } from '../components/Layout'
 import { useProject } from '../components/projectContextBase'
-import { asset, parseLatLng } from '../data'
+import { parseLatLng } from '../data'
 import { IconCopy } from '../components/Icons'
 
 /**
@@ -38,9 +38,7 @@ export function LocationPage() {
     }).addTo(map)
 
     const markerIcon = L.icon({
-      iconUrl: location.mapMarkerImgUrl
-        ? asset(location.mapMarkerImgUrl)
-        : 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+      iconUrl: '/map-marker.svg',
       iconSize: [38, 48],
       iconAnchor: [19, 44],
       popupAnchor: [0, -40],
@@ -48,7 +46,7 @@ export function LocationPage() {
 
     L.marker(center, { icon: markerIcon })
       .addTo(map)
-      .bindPopup(address || 'PH Balcony')
+      .bindPopup(address || 'Terrazy')
 
     for (const poi of pois) {
       const lat = Number(poi.latitude)

@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import type { ReactNode } from 'react'
 import { NavLink } from 'react-router-dom'
-import { asset } from '../data'
 import { useProject } from './projectContextBase'
 import {
   IconBuilding,
@@ -59,10 +58,6 @@ export function Layout({ children, topbarLeft, topbarRight, title }: LayoutProps
   const { project } = useProject()
   const closeMenu = () => setMenuOpen(false)
 
-  const logoUrl = project.menu.logo?.logoImgUrl
-    ? asset(project.menu.logo.logoImgUrl)
-    : undefined
-
   return (
     <div className="app-shell">
       <button
@@ -84,7 +79,7 @@ export function Layout({ children, topbarLeft, topbarRight, title }: LayoutProps
           />
           <aside className="sidebar" aria-label="Menú principal">
             <div className="sidebar__header">
-              {logoUrl && <img className="sidebar__logo" src={logoUrl} alt="PH Balcony" />}
+              <img className="sidebar__logo" src="/logo.svg" alt="Terrazy" />
               <button
                 type="button"
                 className="sidebar__close"

@@ -46,7 +46,7 @@ export function AmenitiesPage() {
         <div className="page-scroll__inner">
           <h1 className="page-heading">Amenities</h1>
           <p className="page-subheading">
-            Piscina, crossfit, pet garden, coworking y rooftops de PH Balcony. Toca una
+            Piscina, crossfit, pet garden, coworking y rooftops de Terrazy. Toca una
             foto para verla en pantalla completa.
           </p>
 
